@@ -15,23 +15,20 @@ def read_line(ser):
 
 
 def test_bmp280_startup_message(setup_hardware):
-    ser = setup_hardware
-    startup = read_line(ser)
+    ser, startup = setup_hardware
     assert startup == "BMP280 connected!", \
         f"Expected 'BMP280 connected!', got {startup!r}"
 
 
 def test_bmp280_data_format(setup_hardware):
-    ser = setup_hardware
-    read_line(ser)  # skip startup message
+    ser, _ = setup_hardware
     data = read_line(ser)
     assert DATA_LINE_PATTERN.match(data), \
         f"Data line does not match 'T: <float>, P: <float>', got {data!r}"
 
 
 def test_bmp280_temperature_in_range(setup_hardware):
-    ser = setup_hardware
-    read_line(ser)  # skip startup message
+    ser, _ = setup_hardware
     data = read_line(ser)
     m = DATA_LINE_PATTERN.match(data)
     assert m, f"Line format error: {data!r}"
@@ -41,8 +38,7 @@ def test_bmp280_temperature_in_range(setup_hardware):
 
 
 def test_bmp280_pressure_in_range(setup_hardware):
-    ser = setup_hardware
-    read_line(ser)  # skip startup message
+    ser, _ = setup_hardware
     data = read_line(ser)
     m = DATA_LINE_PATTERN.match(data)
     assert m, f"Line format error: {data!r}"
@@ -52,9 +48,7 @@ def test_bmp280_pressure_in_range(setup_hardware):
 
 
 def test_bmp280_readings_consistency(setup_hardware):
-    ser = setup_hardware
-    read_line(ser)  # skip startup message
-
+    ser, _ = setup_hardware
     temperatures, pressures = [], []
     for _ in range(3):
         data = read_line(ser)

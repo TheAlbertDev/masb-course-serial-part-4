@@ -5,16 +5,32 @@ import serial
 
 SERIAL_PORT = "/dev/ttyACM0"
 BAUD_RATE = 115200
+STARTUP_MSG = "BMP280 connected!"
+STARTUP_TIMEOUT = 10.0
+
+
+def wait_for_startup(ser, expected: str, timeout: float) -> str:
+    """Read lines, discarding garbage, until `expected` is found or timeout."""
+    deadline = time.monotonic() + timeout
+    line = ""
+    while time.monotonic() < deadline:
+        raw = ser.readline()
+        if not raw:
+            continue
+        line = raw.decode("utf-8", errors="replace").strip()
+        if line == expected:
+            return line
+    raise TimeoutError(
+        f"Did not receive {expected!r} within {timeout}s — last line: {line!r}"
+    )
 
 
 @pytest.fixture(scope="function")
 def setup_hardware():
-    """Setup and teardown for BMP280 hardware testing."""
-    # Open serial port before reset so the startup message is not lost
-    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=3)
-    ser.reset_input_buffer()
+    """Open port, reset MCU, and drain garbage until the startup banner arrives."""
+    ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+    # No reset_input_buffer — flushing after the reset would discard the startup message.
 
-    # Reset the MCU so the program starts from scratch
     subprocess.run(
         [
             "pio",
@@ -28,9 +44,9 @@ def setup_hardware():
         ],
         check=True,
     )
-    time.sleep(1.0)  # Wait for MCU init, I2C calibration read, and first measurement
 
-    yield ser
+    startup_message = wait_for_startup(ser, STARTUP_MSG, STARTUP_TIMEOUT)
 
-    # Teardown
+    yield ser, startup_message
+
     ser.close()
