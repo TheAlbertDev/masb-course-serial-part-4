@@ -138,6 +138,21 @@ Do not create any new branch or project. Implement the challenge in the project 
 
 When printing the temperature and atmospheric pressure to the terminal, use the same text format as in the Arduino challenge.
 
+**Important.** Rmember to add to the `cmake/gcc-arm-none-eabi.cmake` file the following line near the very end:
+
+```diff
+...
+
+set(CMAKE_EXE_LINKER_FLAGS "${TARGET_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -T \"${CMAKE_SOURCE_DIR}/STM32F401XX_FLASH.ld\"")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --specs=nano.specs")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${CMAKE_PROJECT_NAME}.map -Wl,--gc-sections")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--print-memory-usage")
++ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -u _printf_float")
+
+set(TOOLCHAIN_LINK_LIBRARIES "m")
+```
+
 Create a Pull Request from the `stm32cube/<username>/bmp280` branch to `main` and wait for the test results. Correct any undesired behavior detected by the tests, and, once all tests have passed, proceed to merge the Pull Request 🚀
 
 ## Evaluation
